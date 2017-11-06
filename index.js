@@ -117,6 +117,7 @@ self.reportUrl = options.reportUrl === UNDEFINED ? '' : options.reportUrl;
 var suites = [],
     currentSuite = null,
     totalSpecsExecuted = 0,
+    totalSpecsFailed = 0,
     totalSpecsDefined,
     // when use use fit, jasmine never calls suiteStarted / suiteDone, so make a fake one to use
     fakeFocusedSuite = {
@@ -205,7 +206,7 @@ self.specDone = function(spec) {
     spec._endTime = new Date();
     if (isSkipped(spec)) { spec._suite._skipped++; }
     if (isDisabled(spec)) { spec._suite._disabled++; }
-    if (isFailed(spec)) { spec._suite._failures++; }
+    if (isFailed(spec)) { spec._suite._failures++; totalSpecsFailed++; }
     totalSpecsExecuted++;
 
     //Take screenshots taking care of the configuration
@@ -261,9 +262,12 @@ self.jasmineDone = function() {
         wrapOutputAndWriteFile(reportFilename, output);
     }
 
+    let summaryJasmineDone = "Finished Automated tests. Executed `" + totalSpecsExecuted + " specs, " + totalSpecsFailed + " failures`. Go to " + self.reportUrl + reportFilename+ ".html";
+    //log(summaryJasmineDone);
+    
     if (self.notifySlack) {
         self.notifySlack.send({
-            text: "Finished Automated tests. Executed `" + totalSpecsExecuted + " specs`. Go to " + self.reportUrl + reportFilename+ ".html",
+            text: summaryJasmineDone,
         });
     }
     //log("Specs skipped but not reported (entire suite skipped or targeted to specific specs)", totalSpecsDefined - totalSpecsExecuted + totalSpecsDisabled);
