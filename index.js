@@ -119,6 +119,7 @@ var suites = [],
     totalSpecsExecuted = 0,
     totalSpecsFailed = 0,
     totalSpecsDefined,
+    failedSpecs = [],
     // when use use fit, jasmine never calls suiteStarted / suiteDone, so make a fake one to use
     fakeFocusedSuite = {
         id: 'focused',
@@ -206,7 +207,7 @@ self.specDone = function(spec) {
     spec._endTime = new Date();
     if (isSkipped(spec)) { spec._suite._skipped++; }
     if (isDisabled(spec)) { spec._suite._disabled++; }
-    if (isFailed(spec)) { spec._suite._failures++; totalSpecsFailed++; }
+    if (isFailed(spec)) { spec._suite._failures++; totalSpecsFailed++; failedSpecs.push(spec); }
     totalSpecsExecuted++;
 
     //Take screenshots taking care of the configuration
@@ -431,13 +432,46 @@ self.writeFile = function(filename, text) {
 
 // To remove complexity and be more DRY about the silly preamble and <testsuites> element
 var prefix = '<!DOCTYPE html><html><head lang=en><meta charset=UTF-8><title>Test Report -  ' + getReportDate() + '</title><style>body{font-family:"open_sans",sans-serif}.suite{width:100%;overflow:auto}.suite .stats{margin:0;width:90%;padding:0}.suite .stats li{display:inline;list-style-type:none;padding-right:20px}.suite h2{margin:0}.suite header{margin:0;padding:5px 0 5px 5px;background:#003d57;color:white}.spec{width:100%;overflow:auto;border-bottom:1px solid #e5e5e5}.spec:hover{background:#e8f3fb}.spec h3{margin:5px 0}.spec .description{margin:1% 2%;width:65%;float:left}.spec .resume{width:29%;margin:1%;float:left;text-align:center}</style></head>';
-    prefix += '<body><a href="console.log" target="_blank" title="If configured, view the saved console output log of this test run">View Log</a><section>';
+prefix += '<body><h1>Test Report -  ' + getReportDate() + '</h1>';
+prefix += '<section>';
 var suffix = '\n</section></body></html>';
 
 function wrapOutputAndWriteFile(filename, text) {
     if (filename.substr(-5) !== '.html') { filename += '.html'; }
-    self.writeFile(filename, (prefix + text + suffix));
+
+    var summary = '<span style="font-family:monospace">SUMMARY: Executed ' + totalSpecsExecuted + ' specs, ' + totalSpecsFailed + ' failures </span> ';
+    summary += '<a href="console.log" target="_blank" title="If configured, view the saved console output log of this test run">View Log</a>' 
+   
+    if(failedSpecs.length > 0){
+        summary+="<pre style='font-family:monospace'>"
+        summary+="**************************************************" + "</br>";
+        summary+="*                    Failures                    *"+ "</br>";
+        summary+="**************************************************"+ "</br>";
+        summary+="<ol>";
+        for(let spec of failedSpecs){ 
+          summary+= specFailureAsHtml(spec);
+        }
+        summary+="</ol>";
+        summary+="</pre>";
+
+    }
+    self.writeFile(filename, (prefix + summary + text + suffix));
 }
+
+    function specFailureAsHtml(spec) {
+
+        var html = '<li>';
+        html += escapeInvalidHtmlChars(spec.description) + '</li>';
+        html += '<ul>';
+        _.each(spec.failedExpectations, function (expectation) {
+            html += '<li>';
+            html += expectation.message;
+            html += '</li>';
+        });
+        html += '</ul>';
+
+        return html;
+    }
 
 return this;
 }
