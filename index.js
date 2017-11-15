@@ -345,7 +345,8 @@ function suiteAsHtml(suite) {
 
     for (var i = 0; i < suite._specs.length; i++) {
         var spec = suite._specs[i];
-        html += '<div class="spec">';
+        var failureId = isFailed(spec) ? 'id="fail' + totalSpecsFailed : "";
+        html += '<div class="spec"' + failureId + '">';
         html += specAsHtml(spec);
             html += '<div class="resume">';
             if (spec.screenshot !== UNDEFINED){
@@ -448,8 +449,10 @@ function wrapOutputAndWriteFile(filename, text) {
         summary+="*                    Failures                    *"+ "</br>";
         summary+="**************************************************"+ "</br>";
         summary+="<ol>";
+        var i = 0;
         for(let spec of failedSpecs){ 
-          summary+= specFailureAsHtml(spec);
+            i++;
+          summary+= specFailureAsHtml(spec, i);
         }
         summary+="</ol>";
         summary+="</pre>";
@@ -458,9 +461,10 @@ function wrapOutputAndWriteFile(filename, text) {
     self.writeFile(filename, (prefix + summary + text + suffix));
 }
 
-    function specFailureAsHtml(spec) {
+    function specFailureAsHtml(spec, index) {
 
         var html = '<li>';
+        html += '<a href="#fail' + index + '">Fail #' + index + ':</a> '
         html += escapeInvalidHtmlChars(spec.description) + '</li>';
         html += '<ul>';
         _.each(spec.failedExpectations, function (expectation) {
