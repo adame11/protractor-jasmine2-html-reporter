@@ -487,7 +487,7 @@ function wrapOutputAndWriteFile(filename, text) {
 
         var html = '<li>';
         html += '<a href="#fail' + index + '">Fail #' + index + ':</a> '
-        html += escapeInvalidHtmlChars(spec.description) + '</li>';
+        html += escapeInvalidHtmlChars(spec.fullName) + '</li>';//.fullName appends suite name in addition to .description
         html += '<ul>';
         _.each(spec.failedExpectations, function (expectation) {
             html += '<li>';
