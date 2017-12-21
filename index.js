@@ -112,6 +112,8 @@ self.showPassed = options.showPassed === UNDEFINED ? true : options.showPassed;
 self.notifySlack = options.notifySlackUrl === UNDEFINED ? false : new nodeSlack(options.notifySlackUrl);
 //if report is served via a webserver, aappend a url in front of report name (e.g, http://reportserver.domain.com/reports/ + the name of report)
 self.reportUrl = options.reportUrl === UNDEFINED ? '' : options.reportUrl;
+//lightbox shows all the screenshot images inside a lightbox - uses a script, jquery, css, and tags each anchor with data-lightbox="nameofgroup"
+self.lightbox = options.lightbox === UNDEFINED ? true : options.lightbox;
 
 
 var suites = [],
@@ -356,7 +358,8 @@ function suiteAsHtml(suite) {
         html += specAsHtml(spec);
             html += '<div class="resume">';
             if (spec.screenshot !== UNDEFINED){
-                html += '<a href="' + self.screenshotsFolder + spec.screenshot + '">';
+                var lightboxtag = self.lightbox ? 'data-lightbox="screenshots"' : '';
+                html += '<a ' + lightboxtag  + ' href="' + self.screenshotsFolder + spec.screenshot + '">';
                 html += '<img src="' + self.screenshotsFolder + spec.screenshot + '" width="100" height="100" />';
                 html += '</a>';
             }
@@ -454,10 +457,16 @@ a:link,a:visited{color:blue}
 .spec h3{margin:5px 0}
 .spec .description{margin:1% 2%;width:65%;float:left}
 .spec .resume{width:29%;margin:1%;float:left;text-align:center}`
-prefix += '</style></head>';
+prefix += '</style>';
+if(self.lightbox){
+    prefix+='<link href="../css/lightbox.css" rel="stylesheet">'
+}
+prefix += '</head>';
 prefix += '<body><h1>Test Report -  ' + getReportDate() + '</h1>';
 prefix += '<section>';
-var suffix = '\n</section></body></html>';
+
+var lightboxscript = self.lightbox ? '\n<script src="../js/lightbox-plus-jquery.min.js"></script>\n' : '';
+var suffix = '\n</section>' + lightboxscript + '</body></html>';
 
 function wrapOutputAndWriteFile(filename, text) {
     if (filename.substr(-5) !== '.html') { filename += '.html'; }
